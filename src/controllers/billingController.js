@@ -638,6 +638,9 @@ export const createBill = async (req, res) => {
         billToName: data.billToName || 'OJ LAW FIRM & ASSOCIATES',
         billToAddress: data.billToAddress || '11711 Bedford St. Suite 01, Houston TX 77031',
         status: 'ISSUED',
+        cmsSignatures: data.cmsSignatures 
+          ? (typeof data.cmsSignatures === 'string' ? data.cmsSignatures : JSON.stringify(data.cmsSignatures))
+          : null,
         totals: { totalCharges: 0, totalPayments: 0, totalAdjustments: 0, balanceDue: 0 },
         aging: { current: 0, past30: 0, past60: 0, past90: 0 }
       },
@@ -1545,13 +1548,15 @@ export const updateBill = async (req, res) => {
 
     await recalculateBillTotals(id);
 
-    if (status || req.body.cmsSignatures) {
+    if (status || req.body.cmsSignatures !== undefined) {
       const dataToUpdate = {};
       if (status) dataToUpdate.status = status;
-      if (req.body.cmsSignatures) {
-        dataToUpdate.cmsSignatures = typeof req.body.cmsSignatures === 'string' 
-          ? req.body.cmsSignatures 
-          : JSON.stringify(req.body.cmsSignatures);
+      if (req.body.cmsSignatures !== undefined) {
+        dataToUpdate.cmsSignatures = req.body.cmsSignatures === null 
+          ? null 
+          : (typeof req.body.cmsSignatures === 'string' 
+              ? req.body.cmsSignatures 
+              : JSON.stringify(req.body.cmsSignatures));
       }
 
       await prisma.bill.update({
