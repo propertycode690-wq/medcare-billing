@@ -1801,7 +1801,6 @@ export const recordCounselingVisit = async (req, res) => {
       targetCaseId = patient.cases[0].id;
     }
 
-    const generatedId = `apt-coun-${Date.now()}`;
     const cpt = data.cptCode || '90834';
     let aptType = 'Individual Psychotherapy (45 Min)';
     if (cpt === '90791') aptType = 'Psychiatric Diagnostic Evaluation (Intake)';
@@ -1809,6 +1808,25 @@ export const recordCounselingVisit = async (req, res) => {
     else if (cpt === '90832') aptType = 'Individual Psychotherapy (30 Min)';
     else if (cpt === '90847') aptType = 'Family Psychotherapy (50 Min)';
 
+    // Prevent duplicate visit for same patient, date and cpt
+    const existingVisit = await prisma.appointment.findFirst({
+      where: {
+        patientId: patient.id,
+        providerId: 'prov-counselor',
+        date: data.date,
+        cptCode: cpt
+      }
+    });
+
+    if (existingVisit) {
+      return res.status(200).json({
+        success: true,
+        message: 'Counseling visit already recorded for this date and service code.',
+        visit: existingVisit
+      });
+    }
+
+    const generatedId = `apt-coun-${Date.now()}`;
     const newVisit = await prisma.appointment.create({
       data: {
         id: generatedId,

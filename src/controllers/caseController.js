@@ -133,7 +133,9 @@ const formatCase = (c) => {
     appointments: c.appointments || [],
     clinicalNotes: c.clinicalNotes || [],
     caseTotalBilling,
-    connectedProviderLedgersCount: uniqueProviders.size
+    connectedProviderLedgersCount: uniqueProviders.size,
+    totalCompletedVisits: (c.appointments || []).filter(a => (a.status || '').toUpperCase() === 'COMPLETED').length,
+    totalVisits: (c.appointments || []).filter(a => (a.status || '').toUpperCase() === 'COMPLETED').length
   };
 };
 
